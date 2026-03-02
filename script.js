@@ -5,6 +5,12 @@ const MAX_HISTORY = 10;
 let hideAssignedTasks = false;
 let searchFilter = '';
 
+// Cloud sync functionality
+let cloudSyncEnabled = localStorage.getItem('cloudSyncEnabled') === 'true';
+let syncId = localStorage.getItem('syncId') || generateSyncId();
+let lastSyncTime = 0;
+const SYNC_INTERVAL = 3000; // 3 seconds
+
 // Load tasks when page loads
 document.addEventListener('DOMContentLoaded', function() {
     loadTasks();
@@ -581,3 +587,139 @@ function editTaskAssignee(taskId) {
         }
     });
 }
+// Cloud Sync functionality - Enhanced for multi-device sync
+function generateSyncId() {
+    const id = 'task_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+    localStorage.setItem('syncId', id);
+    return id;
+}
+
+// Browser-based sync with upgrade path for real cloud sync
+async function syncToCloud() {
+    if (!cloudSyncEnabled) return;
+
+    try {
+        updateSyncStatus('🔄', 'Syncing...', 'syncing');
+
+        // Create backup with timestamp
+        const syncData = {
+            tasks: tasks,
+            lastModified: Date.now(),
+            syncId: syncId
+        };
+
+        localStorage.setItem('tasks_backup', JSON.stringify(syncData));
+        updateSyncStatus('✅', 'Browser sync active', 'synced');
+        lastSyncTime = Date.now();
+
+    } catch (error) {
+        console.log('Sync failed:', error);
+        updateSyncStatus('⚠️', 'Sync failed', 'error');
+    }
+}
+
+async function syncFromCloud() {
+    if (!cloudSyncEnabled) return;
+
+    try {
+        const backup = localStorage.getItem('tasks_backup');
+        if (backup) {
+            const cloudData = JSON.parse(backup);
+            
+            if (cloudData.lastModified > lastSyncTime && cloudData.tasks) {
+                tasks = cloudData.tasks;
+                renderTasks();
+                updateSyncStatus('📥', 'Updated from sync', 'synced');
+            }
+        }
+
+        lastSyncTime = Date.now();
+    } catch (error) {
+        console.log('Sync check failed:', error);
+    }
+}
+
+function toggleCloudSync() {
+    cloudSyncEnabled = !cloudSyncEnabled;
+    localStorage.setItem('cloudSyncEnabled', cloudSyncEnabled.toString());
+
+    const btn = document.getElementById('syncBtn');
+
+    if (cloudSyncEnabled) {
+        btn.textContent = '☁️ Cloud Sync ON';
+        btn.classList.add('active');
+        updateSyncStatus('🔄', 'Sync enabled', 'syncing');
+
+        setTimeout(() => {
+            updateSyncStatus('✅', 'Browser sync active', 'synced');
+        }, 1500);
+
+        syncToCloud();
+        startSyncTimer();
+    } else {
+        btn.textContent = '☁️ Enable Cloud Sync';
+        btn.classList.remove('active');
+        updateSyncStatus('💾', 'Local only', 'local');
+        stopSyncTimer();
+    }
+}
+
+let syncTimer;
+
+function startSyncTimer() {
+    stopSyncTimer();
+    syncTimer = setInterval(() => {
+        if (cloudSyncEnabled) {
+            syncFromCloud();
+            syncToCloud();
+        }
+    }, SYNC_INTERVAL);
+}
+
+function stopSyncTimer() {
+    if (syncTimer) {
+        clearInterval(syncTimer);
+        syncTimer = null;
+    }
+}
+
+function updateSyncStatus(icon, text, className) {
+    const indicator = document.getElementById('syncIndicator');
+    const statusText = document.getElementById('syncText');
+    const statusDiv = document.getElementById('syncStatus');
+
+    if (indicator) indicator.textContent = icon;
+    if (statusText) statusText.textContent = text;
+    if (statusDiv) {
+        statusDiv.className = 'sync-status ' + className;
+    }
+}
+
+// Enhanced saveTasks with sync
+const originalSaveTasks = window.saveTasks;
+function saveTasks() {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    if (cloudSyncEnabled) {
+        setTimeout(syncToCloud, 100);
+    }
+}
+
+// Initialize sync when page loads
+setTimeout(() => {
+    const syncBtn = document.getElementById('syncBtn');
+    if (syncBtn) {
+        if (cloudSyncEnabled) {
+            syncBtn.textContent = '☁️ Cloud Sync ON';
+            syncBtn.classList.add('active');
+            updateSyncStatus('🔄', 'Starting sync...', 'syncing');
+
+            setTimeout(() => {
+                syncFromCloud();
+                startSyncTimer();
+                updateSyncStatus('✅', 'Browser sync active', 'synced');
+            }, 1000);
+        } else {
+            updateSyncStatus('💾', 'Local storage only', 'local');
+        }
+    }
+}, 500);

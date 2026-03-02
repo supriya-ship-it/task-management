@@ -1,68 +1,97 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quick Task Manager</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="container">
-        <h1>Quick Task Manager</h1>
+ <!DOCTYPE html>
+  <html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Quick Task Manager</title>
+      <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+      <div class="container">
+          <h1>Quick Task Manager</h1>
 
-        <!-- Quick Add Form -->
-        <div class="add-task-form">
-            <input type="text" id="taskInput" placeholder="Add a new task..." autocomplete="off">
-            <input type="text" id="assigneeInput" placeholder="Assigned to (optional)..." autocomplete="off">
-            <select id="categorySelect">
-                <option value="high-priority">🔥 High Priority</option>
-                <option value="todo" selected>✅ TO DO</option>
-                <option value="sometime-later">⏰ Sometime Later</option>
-                <option value="discuss">💬 Discuss</option>
-            </select>
-            <button type="button" onclick="addTask()">Add Task</button>
-        </div>
+          <!-- Quick Add Form -->
+          <div class="add-task-form">
+              <input type="text" id="taskInput" placeholder="Add a new 
+  task..." autocomplete="off">
+              <input type="text" id="assigneeInput" placeholder="Assigned to 
+  (optional)..." autocomplete="off">
+              <select id="categorySelect">
+                  <option value="high-priority">🔥 High Priority</option>
+                  <option value="todo" selected>✅ TO DO</option>
+                  <option value="sometime-later">⏰ Sometime Later</option>
+                  <option value="discuss">💬 Discuss</option>
+              </select>
+              <button type="button" onclick="addTask()">Add Task</button>
+          </div>
 
-        <!-- Filter Controls -->
-        <div class="filter-controls">
-            <input type="text" id="searchInput" placeholder="🔍 Search by assignee name..." autocomplete="off">
-            <button type="button" onclick="toggleAssignedTasks()" id="hideAssignedBtn">👤 Hide Assigned Tasks</button>
-            <button type="button" onclick="clearFilters()" class="clear-filters-btn">Clear Filters</button>
-        </div>
+          <!-- Filter Controls -->
+          <div class="filter-controls">
+              <input type="text" id="searchInput" placeholder="🔍 Search by 
+  assignee name..." autocomplete="off">
+              <button type="button" onclick="toggleAssignedTasks()" 
+  id="hideAssignedBtn">👤 Hide Assigned Tasks</button>
+              <button type="button" onclick="clearFilters()" 
+  class="clear-filters-btn">Clear Filters</button>
+          </div>
 
-        <!-- Task Categories -->
-        <div class="task-grid">
-            <div class="task-column" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                <h2>🔥 High Priority</h2>
-                <div id="high-priority" class="task-list" data-category="high-priority"></div>
-            </div>
+          <!-- Task Categories -->
+          <div class="task-grid">
+              <div class="task-column" ondrop="drop(event)" 
+  ondragover="allowDrop(event)" ondragenter="dragEnter(event)" 
+  ondragleave="dragLeave(event)">
+                  <h2>🔥 High Priority</h2>
+                  <div id="high-priority" class="task-list" 
+  data-category="high-priority"></div>
+              </div>
 
-            <div class="task-column" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                <h2>✅ TO DO</h2>
-                <div id="todo" class="task-list" data-category="todo"></div>
-            </div>
+              <div class="task-column" ondrop="drop(event)" 
+  ondragover="allowDrop(event)" ondragenter="dragEnter(event)" 
+  ondragleave="dragLeave(event)">
+                  <h2>✅ TO DO</h2>
+                  <div id="todo" class="task-list" data-category="todo"></div>
+              </div>
 
-            <div class="task-column" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                <h2>⏰ Sometime Later</h2>
-                <div id="sometime-later" class="task-list" data-category="sometime-later"></div>
-            </div>
+              <div class="task-column" ondrop="drop(event)" 
+  ondragover="allowDrop(event)" ondragenter="dragEnter(event)" 
+  ondragleave="dragLeave(event)">
+                  <h2>⏰ Sometime Later</h2>
+                  <div id="sometime-later" class="task-list" 
+  data-category="sometime-later"></div>
+              </div>
 
-            <div class="task-column" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                <h2>💬 Discuss</h2>
-                <div id="discuss" class="task-list" data-category="discuss"></div>
-            </div>
-        </div>
+              <div class="task-column" ondrop="drop(event)" 
+  ondragover="allowDrop(event)" ondragenter="dragEnter(event)" 
+  ondragleave="dragLeave(event)">
+                  <h2>💬 Discuss</h2>
+                  <div id="discuss" class="task-list" 
+  data-category="discuss"></div>
+              </div>
+          </div>
 
-        <!-- Action Buttons -->
-        <div class="action-section">
-            <button onclick="undoLastAction()" class="undo-btn" id="undoBtn" disabled>↶ Undo</button>
-            <button onclick="exportTasks()" class="export-btn">📤 Export Tasks</button>
-            <input type="file" id="importFile" accept=".json" onchange="importTasks(event)" style="display: none;">
-            <button onclick="document.getElementById('importFile').click()" class="import-btn">📥 Import Tasks</button>
-            <button onclick="clearAllTasks()" class="clear-btn">Clear All Tasks</button>
-        </div>
-    </div>
+          <!-- Sync Status -->
+          <div class="sync-status" id="syncStatus">
+              <span class="sync-indicator" id="syncIndicator">🔄</span>
+              <span id="syncText">Setting up sync...</span>
+          </div>
 
-    <script src="script.js"></script>
-</body>
-</html>
+          <!-- Action Buttons -->
+          <div class="action-section">
+              <button onclick="undoLastAction()" class="undo-btn" id="undoBtn"
+   disabled>↶ Undo</button>
+              <button onclick="toggleCloudSync()" class="sync-btn" 
+  id="syncBtn">☁️ Enable Cloud Sync</button>
+              <button onclick="exportTasks()" class="export-btn">📤 Export
+  Tasks</button>
+              <input type="file" id="importFile" accept=".json" 
+  onchange="importTasks(event)" style="display: none;">
+              <button onclick="document.getElementById('importFile').click()" 
+  class="import-btn">📥 Import Tasks</button>
+              <button onclick="clearAllTasks()" class="clear-btn">Clear All
+  Tasks</button>
+          </div>
+      </div>
+
+      <script src="script.js"></script>
+  </body>
+  </html>
